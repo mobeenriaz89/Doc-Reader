@@ -43,11 +43,11 @@ class MainActivity : AppCompatActivity(), AppPermissionInterface {
     }
 
     override fun permissionDenied() {
-        Toast.makeText(this,"Storage permission required",Toast.LENGTH_LONG)
+        Toast.makeText(this,"Storage permission required",Toast.LENGTH_LONG).show()
     }
 
     override fun shouldShowRequestPermissionRationale() {
-        Toast.makeText(this,"Storage permission required",Toast.LENGTH_LONG)
+        Toast.makeText(this,"Storage permission required",Toast.LENGTH_LONG).show()
     }
 
 }

@@ -1,7 +1,9 @@
 package com.ingenious.documentreader.Activities
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Parcelable
 import androidx.appcompat.app.AppCompatActivity
 import com.github.barteksc.pdfviewer.PDFView
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
@@ -16,17 +18,33 @@ class DocViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_doc_view)
         pdfView = findViewById(R.id.pdfView)
-        intent.extras?.let {
-            filePath = it.getString(AppConstants.KEY_FILE_PATH)
-            var uri = Uri.parse(filePath)
-            pdfView.fromUri(uri)
-                .enableSwipe(true)
-                .enableAnnotationRendering(true)
-                .scrollHandle(DefaultScrollHandle(this))
-                .load()
+        when {
+            intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_VIEW -> {
+                handleSharedPdf(intent)
+            }
+            else -> {
+                intent.extras?.let {
+                    filePath = it.getString(AppConstants.KEY_FILE_PATH)
+                    var uri = Uri.parse(filePath)
+                    loadPdfFile(uri)
+                }
+            }
+        }
+
+    }
+
+    private fun handleSharedPdf(intent: Intent) {
+        (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let{
+            loadPdfFile(it)
         }
     }
 
-
+    private fun loadPdfFile(fileUri: Uri){
+        pdfView.fromUri(fileUri)
+            .enableSwipe(true)
+            .enableAnnotationRendering(true)
+            .scrollHandle(DefaultScrollHandle(this))
+            .load()
+    }
 
 }

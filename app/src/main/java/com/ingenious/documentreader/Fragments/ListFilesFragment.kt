@@ -1,7 +1,7 @@
 package com.ingenious.documentreader.Fragments
 
-import android.content.Context
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,8 +10,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ingenious.documentreader.Adapters.FilesListAdapter
 import com.ingenious.documentreader.Helpers.AppConstants
-import com.ingenious.documentreader.Models.File
+import com.ingenious.documentreader.Models.FileModel
 import com.ingenious.documentreader.R
+import java.io.File
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -24,7 +25,9 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 class ListFilesFragment : Fragment() {
-    // TODO: Rename and change types of parameters
+
+    lateinit var filesList: ArrayList<FileModel>
+
     private var param1: String? = null
     private var param2: String? = null
 
@@ -38,8 +41,10 @@ class ListFilesFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_list_files, container, false)
     }
@@ -51,16 +56,20 @@ class ListFilesFragment : Fragment() {
     }
 
     private fun setupList() {
-        rvFilesList.layoutManager = LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false)
-        val filesList = dummyList()
-        val filesListAdapter =  FilesListAdapter(filesList, context)
+        filesList = ArrayList()
+        rvFilesList.layoutManager =
+            LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        searchDir(Environment.getExternalStorageDirectory())//dummyList()
+        val filesListAdapter = FilesListAdapter(filesList, context)
         rvFilesList.adapter = filesListAdapter
+
+
     }
 
-    private fun dummyList(): ArrayList<File> {
-        val list = ArrayList<File>()
-        for (i in 0..5){
-            list.add(File("file_$i.pdf","somewhere",AppConstants.FILE_TYPE_APPLICATION_PDF))
+    private fun dummyList(): ArrayList<FileModel> {
+        val list = ArrayList<FileModel>()
+        for (i in 0..5) {
+            list.add(FileModel("file_$i.pdf", "somewhere", AppConstants.FILE_TYPE_APPLICATION_PDF))
         }
         return list
     }
@@ -75,12 +84,35 @@ class ListFilesFragment : Fragment() {
          * @return A new instance of fragment ListFilesFragment.
          */
         // TODO: Rename and change types and number of parameters
-        @JvmStatic fun newInstance(param1: String, param2: String) =
-                ListFilesFragment().apply {
-                    arguments = Bundle().apply {
-                        putString(ARG_PARAM1, param1)
-                        putString(ARG_PARAM2, param2)
+        @JvmStatic
+        fun newInstance(param1: String, param2: String) =
+            ListFilesFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_PARAM1, param1)
+                    putString(ARG_PARAM2, param2)
+                }
+            }
+    }
+
+    fun searchDir(dir: File) {
+        val pdfPattern = ".pdf"
+        val FileList = dir.listFiles()
+        if (FileList != null) {
+            for (i in FileList.indices) {
+                if (FileList[i].isDirectory) {
+                    searchDir(FileList[i])
+                } else {
+                    if (FileList[i].name.endsWith(pdfPattern)) {
+                        filesList.add(
+                            FileModel(
+                                FileList[i].name,
+                                FileList[i].toURI().toString(),
+                                AppConstants.FILE_TYPE_APPLICATION_PDF
+                            )
+                        )
                     }
                 }
+            }
+        }
     }
 }

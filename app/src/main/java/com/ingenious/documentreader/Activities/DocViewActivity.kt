@@ -16,7 +16,8 @@ class DocViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_doc_view)
         pdfView = findViewById(R.id.pdfView)
-        intent.extras?.let { filePath = it.getString(AppConstants.KEY_FILE_PATH)
+        intent.extras?.let {
+            filePath = it.getString(AppConstants.KEY_FILE_PATH)
             var uri = Uri.parse(filePath)
             pdfView.fromUri(uri)
                 .enableSwipe(true)

@@ -1,15 +1,20 @@
 package com.ingenious.documentreader.Adapters
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.ingenious.documentreader.Models.File
+import com.ingenious.documentreader.Activities.DocViewActivity
+import com.ingenious.documentreader.Helpers.AppConstants
+import com.ingenious.documentreader.Models.FileModel
 import com.ingenious.documentreader.R
+import java.io.File
 
-class FilesListAdapter(private val _filesList: ArrayList<File>, _context: Context?): RecyclerView.Adapter<FilesListAdapter.FilesViewHolder>() {
+class FilesListAdapter(private val _filesList: ArrayList<FileModel>, _context: Context?): RecyclerView.Adapter<FilesListAdapter.FilesViewHolder>() {
 
     private var filesList = _filesList
     private var context = _context
@@ -21,10 +26,19 @@ class FilesListAdapter(private val _filesList: ArrayList<File>, _context: Contex
 
     override fun onBindViewHolder(holder: FilesViewHolder, position: Int) {
         holder.tvFileName.text = this.filesList[position].fileName
+        holder.itemView.setOnClickListener{
+           openDocActivity(this.filesList[position].filePath)
+        }
     }
 
     override fun getItemCount(): Int {
         return this.filesList.count()
+    }
+
+    private fun openDocActivity(path: String){
+        var intent = Intent(this.context, DocViewActivity::class.java)
+        intent.putExtra(AppConstants.KEY_FILE_PATH,path)
+        this.context?.startActivity(intent)
     }
 
     class FilesViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

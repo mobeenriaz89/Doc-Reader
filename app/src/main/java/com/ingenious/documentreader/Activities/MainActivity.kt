@@ -5,19 +5,26 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import com.ingenious.documentreader.Fragments.ListFilesFragment
 import com.ingenious.documentreader.Helpers.AppConstants
 import com.ingenious.documentreader.Helpers.AppPermissionManager
 import com.ingenious.documentreader.Interfaces.AppPermissionInterface
 import com.ingenious.documentreader.R
 
-class MainActivity : AppCompatActivity(), AppPermissionInterface {
+class MainActivity : AppActivity(), AppPermissionInterface {
 
     private lateinit var btnOpenFile: Button
     private lateinit var flContainer: FrameLayout
+
+    val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()
+    ){ isGranted: Boolean ->
+        if(isGranted){
+            permissionGrated("")
+        }else{
+            permissionDenied("permissionType")
+        }
+    }
 
     private val activityResultLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -29,9 +36,13 @@ class MainActivity : AppCompatActivity(), AppPermissionInterface {
         setContentView(R.layout.activity_main)
         btnOpenFile = findViewById(R.id.btnOpenFile)
         flContainer = findViewById(R.id.flContainer)
-        loadFilesFragment()
-        btnOpenFile.setOnClickListener { AppPermissionManager.checkStoragePermission(this,this) }
-    }
+        btnOpenFile.setOnClickListener {
+            //checkForPermission(permission_type_read_storage,this)
+            AppPermissionManager.checkPermission(permission_type_read_storage,this,this,permissionLauncher)
+        }
+            loadFilesFragment()
+        }
+
 
     private fun loadFilesFragment() {
         var ft = supportFragmentManager.beginTransaction()
@@ -49,16 +60,12 @@ class MainActivity : AppCompatActivity(), AppPermissionInterface {
         startActivity(intent)
     }
 
-    override fun permissionGrated() {
+    override fun permissionGrated(type: String) {
         openFileExplorer()
     }
 
-    override fun permissionDenied() {
-        Toast.makeText(this,"Storage permission required",Toast.LENGTH_LONG).show()
-    }
-
-    override fun shouldShowRequestPermissionRationale() {
-        Toast.makeText(this,"Storage permission required",Toast.LENGTH_LONG).show()
+    override fun permissionDenied(type: String) {
+        showAppDialog("App failed to gain storage access",null,null)
     }
 
 }

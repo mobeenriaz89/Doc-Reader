@@ -1,15 +1,23 @@
 package com.ingenious.documentreader.Fragments
 
+import android.app.Activity
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import android.widget.Button
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ingenious.documentreader.Adapters.FilesListAdapter
 import com.ingenious.documentreader.Helpers.AppConstants
+import com.ingenious.documentreader.Interfaces.AppPermissionInterface
 import com.ingenious.documentreader.Models.FileModel
 import com.ingenious.documentreader.R
 import java.io.File
@@ -19,94 +27,81 @@ import java.io.File
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [ListFilesFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class ListFilesFragment : Fragment() {
-
-    lateinit var filesList: ArrayList<FileModel>
-
-    private var param1: String? = null
-    private var param2: String? = null
+class ListFilesFragment : AppFragment(), AppPermissionInterface {
 
     private lateinit var rvFilesList: RecyclerView
+    private lateinit var clNoAccess: ConstraintLayout
+    private lateinit var btnRetry: Button
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private val filesList = ArrayList<FileModel>()
+
+    private val activityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+        {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+                if(Environment.isExternalStorageManager()) {
+                    setupList()
+                    clNoAccess.visibility = View.GONE
+                }else
+                    clNoAccess.visibility = View.VISIBLE
+            }
         }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_list_files, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         rvFilesList = view.findViewById(R.id.rvFilesList)
-        setupList()
+        clNoAccess = view.findViewById(R.id.clNoAccess)
+        btnRetry = view.findViewById(R.id.btnRetry)
+
+        btnRetry.setOnClickListener{ permissionCheck() }
+        permissionCheck()
+    }
+
+    private fun permissionCheck(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                activityResultLauncher.launch(intent)
+            } else {
+                setupList()
+                clNoAccess.visibility = View.GONE
+            }
+        } else {
+            checkForPermission(permission_type_manage_storage, this)
+        }
     }
 
     private fun setupList() {
-        filesList = ArrayList()
         rvFilesList.layoutManager =
             LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        searchDir(Environment.getExternalStorageDirectory())//dummyList()
-        val filesListAdapter = FilesListAdapter(filesList, context)
-        rvFilesList.adapter = filesListAdapter
-
-
-    }
-
-    private fun dummyList(): ArrayList<FileModel> {
-        val list = ArrayList<FileModel>()
-        for (i in 0..5) {
-            list.add(FileModel("file_$i.pdf", "somewhere", AppConstants.FILE_TYPE_APPLICATION_PDF))
+        activity?.let {
+            searchDir(Environment.getExternalStorageDirectory())
+            val filesListAdapter = FilesListAdapter(filesList, context)
+            rvFilesList.adapter = filesListAdapter
         }
-        return list
-    }
-
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ListFilesFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ListFilesFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
     }
 
     fun searchDir(dir: File) {
         val pdfPattern = ".pdf"
-        val FileList = dir.listFiles()
-        if (FileList != null) {
-            for (i in FileList.indices) {
-                if (FileList[i].isDirectory) {
-                    searchDir(FileList[i])
+        val fileList = dir.listFiles()
+        if (fileList != null) {
+            for (i in fileList.indices) {
+                if (fileList[i].isDirectory) {
+                    searchDir(fileList[i])
                 } else {
-                    if (FileList[i].name.endsWith(pdfPattern)) {
+                    if (fileList[i].name.endsWith(pdfPattern)) {
                         filesList.add(
                             FileModel(
-                                FileList[i].name,
-                                FileList[i].toURI().toString(),
+                                fileList[i].name,
+                                fileList[i].toURI().toString(),
                                 AppConstants.FILE_TYPE_APPLICATION_PDF
                             )
                         )
@@ -114,5 +109,14 @@ class ListFilesFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun permissionGrated(type: String) {
+        setupList()
+        clNoAccess.visibility = View.GONE
+    }
+
+    override fun permissionDenied(type: String) {
+        clNoAccess.visibility = View.VISIBLE
     }
 }

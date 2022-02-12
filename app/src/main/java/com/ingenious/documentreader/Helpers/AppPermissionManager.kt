@@ -2,32 +2,53 @@ package com.ingenious.documentreader.Helpers
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
+import com.ingenious.documentreader.Activities.AppActivity
 import com.ingenious.documentreader.Interfaces.AppPermissionInterface
+import com.ingenious.documentreader.dialogs.AppDialog
 
 object AppPermissionManager {
-    fun checkStoragePermission(permissionManager: AppPermissionInterface, activity: Activity){
+    fun checkPermission(
+        type: String,
+        permissionManager: AppPermissionInterface,
+        activity: AppActivity,
+        permissionLauncher: ActivityResultLauncher<String>
+    ){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             when {
                 ContextCompat.checkSelfPermission(
                     activity,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
+                    type
                 ) == PackageManager.PERMISSION_GRANTED -> {
-                    permissionManager.permissionGrated()
+                    permissionManager.permissionGrated(type)
                 }
-                activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
-                   permissionManager.shouldShowRequestPermissionRationale()
+                activity.shouldShowRequestPermissionRationale(type) -> {
+                showPermissionReasonDialog(type,permissionLauncher,activity)
                 }
                 else -> {
-                    activity.requestPermissions(
-                        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                        AppConstants.REQUEST_CODE_PERMISSION_STORAGE
-                    )
+                    permissionLauncher.launch(type)
                 }
             }
         }
+    }
+
+    fun showPermissionReasonDialog(
+        type: String,
+        permissionLauncher: ActivityResultLauncher<String>,
+        activity: AppActivity
+    ){
+        var msg = ""
+        when(type){
+            Manifest.permission.READ_EXTERNAL_STORAGE -> msg = "This feature requires storage permission"
+            Manifest.permission.MANAGE_EXTERNAL_STORAGE -> msg = "This feature requires files access permission"
+        }
+        val dialog = AppDialog(msg,null) { _, _ ->
+            permissionLauncher.launch(type)
+        }
+        dialog.show(activity.supportFragmentManager,activity.javaClass.simpleName)
     }
 }

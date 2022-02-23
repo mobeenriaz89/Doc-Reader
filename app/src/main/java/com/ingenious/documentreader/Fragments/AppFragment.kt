@@ -2,6 +2,7 @@ package com.ingenious.documentreader.Fragments;
 
 import android.Manifest
 import android.content.DialogInterface
+import android.widget.ProgressBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.ingenious.documentreader.Activities.AppActivity

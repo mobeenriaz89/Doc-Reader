@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ProgressBar
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -20,27 +21,37 @@ import com.ingenious.documentreader.Helpers.AppConstants
 import com.ingenious.documentreader.Interfaces.AppPermissionInterface
 import com.ingenious.documentreader.Models.FileModel
 import com.ingenious.documentreader.R
+import kotlinx.coroutines.*
 import java.io.File
+import kotlin.coroutines.CoroutineContext
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-class ListFilesFragment : AppFragment(), AppPermissionInterface {
+class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope {
+
+    private var job: Job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
 
     private lateinit var rvFilesList: RecyclerView
     private lateinit var clNoAccess: ConstraintLayout
     private lateinit var btnRetry: Button
+    private lateinit var progressbar: ProgressBar
 
-    private val filesList = ArrayList<FileModel>()
+    private var filesList = ArrayList<FileModel>()
+    private lateinit var filesListAdapter: FilesListAdapter
 
     private val activityResultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
                 if(Environment.isExternalStorageManager()) {
-                    setupList()
+                    loadList()
                     clNoAccess.visibility = View.GONE
                 }else
                     clNoAccess.visibility = View.VISIBLE
@@ -60,8 +71,10 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface {
         rvFilesList = view.findViewById(R.id.rvFilesList)
         clNoAccess = view.findViewById(R.id.clNoAccess)
         btnRetry = view.findViewById(R.id.btnRetry)
+        progressbar = view.findViewById(R.id.progressbar)
 
         btnRetry.setOnClickListener{ permissionCheck() }
+        setupList()
         permissionCheck()
     }
 
@@ -71,7 +84,7 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface {
                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                 activityResultLauncher.launch(intent)
             } else {
-                setupList()
+                loadList()
                 clNoAccess.visibility = View.GONE
             }
         } else {
@@ -80,16 +93,23 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface {
     }
 
     private fun setupList() {
-        rvFilesList.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        activity?.let {
-            searchDir(Environment.getExternalStorageDirectory())
-            val filesListAdapter = FilesListAdapter(filesList, context)
+            rvFilesList.layoutManager =
+                LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            filesListAdapter = FilesListAdapter(filesList, context)
             rvFilesList.adapter = filesListAdapter
+    }
+
+    private fun loadList() {
+        progressbar.visibility = View.VISIBLE
+        launch {
+            filesList =
+                withContext(Dispatchers.IO) { searchDir(Environment.getExternalStorageDirectory()) }
+            filesListAdapter.notifyDataSetChanged()
+            progressbar.visibility = View.GONE
         }
     }
 
-    fun searchDir(dir: File) {
+    fun searchDir(dir: File): ArrayList<FileModel> {
         val pdfPattern = ".pdf"
         val fileList = dir.listFiles()
         if (fileList != null) {
@@ -109,14 +129,16 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface {
                 }
             }
         }
+        return filesList
     }
 
     override fun permissionGrated(type: String) {
-        setupList()
+        loadList()
         clNoAccess.visibility = View.GONE
     }
 
     override fun permissionDenied(type: String) {
         clNoAccess.visibility = View.VISIBLE
+        progressbar.visibility = View.GONE
     }
 }

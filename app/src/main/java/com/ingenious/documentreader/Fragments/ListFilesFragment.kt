@@ -14,16 +14,20 @@ import android.widget.ProgressBar
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ingenious.documentreader.Adapters.FilesListAdapter
 import com.ingenious.documentreader.Helpers.AppConstants
+import com.ingenious.documentreader.Helpers.ItemDecoration
+import com.ingenious.documentreader.Helpers.UIHelper
 import com.ingenious.documentreader.Interfaces.AppPermissionInterface
 import com.ingenious.documentreader.Models.FileModel
 import com.ingenious.documentreader.R
 import kotlinx.coroutines.*
 import java.io.File
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.roundToInt
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -93,9 +97,10 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
     }
 
     private fun setupList() {
-            rvFilesList.layoutManager =
-                LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-            filesListAdapter = FilesListAdapter(filesList, context)
+            rvFilesList.layoutManager = GridLayoutManager(context,2)
+        rvFilesList.addItemDecoration(
+            ItemDecoration(UIHelper.dpToPx(8F,resources).roundToInt()))
+                filesListAdapter = FilesListAdapter(filesList, context)
             rvFilesList.adapter = filesListAdapter
     }
 

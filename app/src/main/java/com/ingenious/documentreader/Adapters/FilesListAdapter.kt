@@ -5,6 +5,7 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
@@ -26,6 +27,10 @@ class FilesListAdapter(private val _filesList: ArrayList<FileModel>, _context: C
 
     override fun onBindViewHolder(holder: FilesViewHolder, position: Int) {
         holder.tvFileName.text = this.filesList[position].fileName
+        val thumbBmp = this.filesList[position].thumbUri
+        thumbBmp?.let {
+            holder.imgFileIcon.setImageBitmap(it)
+        }
         holder.itemView.setOnClickListener{
            openDocActivity(this.filesList[position].filePath)
         }
@@ -43,5 +48,6 @@ class FilesListAdapter(private val _filesList: ArrayList<FileModel>, _context: C
 
     class FilesViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvFileName: TextView = itemView.findViewById(R.id.tvFileName)
+        val imgFileIcon: ImageView = itemView.findViewById(R.id.imgFileIcon)
     }
 }

@@ -17,7 +17,7 @@ open class AppActivity: AppCompatActivity() {
         val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()
         ){ isGranted: Boolean ->
             if(isGranted){
-                permissionInterface.permissionGrated(permissionType)
+                permissionInterface.permissionGranted(permissionType)
             }else{
                 permissionInterface.permissionDenied(permissionType)
             }

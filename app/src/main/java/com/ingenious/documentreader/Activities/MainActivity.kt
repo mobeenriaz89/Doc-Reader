@@ -20,7 +20,7 @@ class MainActivity : AppActivity(), AppPermissionInterface {
     val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()
     ){ isGranted: Boolean ->
         if(isGranted){
-            permissionGrated("")
+            permissionGranted("")
         }else{
             permissionDenied("permissionType")
         }
@@ -60,7 +60,7 @@ class MainActivity : AppActivity(), AppPermissionInterface {
         startActivity(intent)
     }
 
-    override fun permissionGrated(type: String) {
+    override fun permissionGranted(type: String) {
         openFileExplorer()
     }
 

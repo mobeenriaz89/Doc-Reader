@@ -1,6 +1,6 @@
 package com.ingenious.documentreader.Interfaces
 
 interface AppPermissionInterface {
-    fun permissionGrated(type: String)
+    fun permissionGranted(type: String)
     fun permissionDenied(type: String)
 }

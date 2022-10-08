@@ -1,8 +1,6 @@
 package com.ingenious.documentreader.Helpers
 
 import android.Manifest
-import android.app.Activity
-import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.ActivityResultLauncher
@@ -24,7 +22,7 @@ object AppPermissionManager {
                     activity,
                     type
                 ) == PackageManager.PERMISSION_GRANTED -> {
-                    permissionManager.permissionGrated(type)
+                    permissionManager.permissionGranted(type)
                 }
                 activity.shouldShowRequestPermissionRationale(type) -> {
                 showPermissionReasonDialog(type,permissionLauncher,activity)

@@ -8,10 +8,10 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/red_theme_A">
+        android:background="@color/white_theme_A">
     <ImageView
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:id="@+id/imgFileIcon"
         android:src="@android:drawable/ic_menu_gallery"
         app:layout_constraintTop_toTopOf="parent"

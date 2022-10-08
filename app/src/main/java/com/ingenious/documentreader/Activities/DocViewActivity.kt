@@ -34,7 +34,8 @@ class DocViewActivity : AppCompatActivity() {
     }
 
     private fun handleSharedPdf(intent: Intent) {
-        (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let{
+        val sharedUri = intent.data
+        sharedUri?.let{
             loadPdfFile(it)
         }
     }

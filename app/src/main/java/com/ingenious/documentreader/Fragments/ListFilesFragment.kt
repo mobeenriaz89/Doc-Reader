@@ -1,21 +1,21 @@
 package com.ingenious.documentreader.Fragments
 
-import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.ParcelFileDescriptor
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ProgressBar
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ingenious.documentreader.Adapters.FilesListAdapter
 import com.ingenious.documentreader.Helpers.AppConstants
@@ -24,15 +24,13 @@ import com.ingenious.documentreader.Helpers.UIHelper
 import com.ingenious.documentreader.Interfaces.AppPermissionInterface
 import com.ingenious.documentreader.Models.FileModel
 import com.ingenious.documentreader.R
+import com.shockwave.pdfium.PdfDocument
+import com.shockwave.pdfium.PdfiumCore
 import kotlinx.coroutines.*
 import java.io.File
+import java.io.FileOutputStream
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
 class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope {
 
@@ -55,8 +53,8 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
                 if(Environment.isExternalStorageManager()) {
-                    loadList()
                     clNoAccess.visibility = View.GONE
+                    loadList()
                 }else
                     clNoAccess.visibility = View.VISIBLE
             }
@@ -77,16 +75,20 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
         btnRetry = view.findViewById(R.id.btnRetry)
         progressbar = view.findViewById(R.id.progressbar)
 
-        btnRetry.setOnClickListener{ permissionCheck() }
+        btnRetry.setOnClickListener{ permissionCheck(true) }
         setupList()
-        permissionCheck()
+        permissionCheck(false)
     }
 
-    private fun permissionCheck(){
+    private fun permissionCheck(didRetry: Boolean){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
-                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                activityResultLauncher.launch(intent)
+                if(didRetry) {
+                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                    activityResultLauncher.launch(intent)
+                }else{
+                    clNoAccess.visibility = View.VISIBLE
+                }
             } else {
                 loadList()
                 clNoAccess.visibility = View.GONE
@@ -110,6 +112,7 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
             filesList =
                 withContext(Dispatchers.IO) { searchDir(Environment.getExternalStorageDirectory()) }
             filesListAdapter.notifyDataSetChanged()
+            clNoAccess.visibility = View.GONE
             progressbar.visibility = View.GONE
         }
     }
@@ -123,11 +126,13 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
                     searchDir(fileList[i])
                 } else {
                     if (fileList[i].name.endsWith(pdfPattern)) {
+                        generateImageFromPdf(Uri.fromFile(fileList[i]))
                         filesList.add(
                             FileModel(
                                 fileList[i].name,
                                 fileList[i].toURI().toString(),
-                                AppConstants.FILE_TYPE_APPLICATION_PDF
+                                AppConstants.FILE_TYPE_APPLICATION_PDF,
+                                generateImageFromPdf(Uri.fromFile(fileList[i]))
                             )
                         )
                     }
@@ -137,7 +142,7 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
         return filesList
     }
 
-    override fun permissionGrated(type: String) {
+    override fun permissionGranted(type: String) {
         loadList()
         clNoAccess.visibility = View.GONE
     }
@@ -145,5 +150,47 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
     override fun permissionDenied(type: String) {
         clNoAccess.visibility = View.VISIBLE
         progressbar.visibility = View.GONE
+    }
+
+    fun generateImageFromPdf(pdfUri: Uri?): Bitmap? {
+        val pageNumber = 0
+        val pdfiumCore = PdfiumCore(context)
+        try {
+            //http://www.programcreek.com/java-api-examples/index.php?api=android.os.ParcelFileDescriptor
+            val fd: ParcelFileDescriptor? =
+                pdfUri?.let { activity?.contentResolver?.openFileDescriptor(it, "r") }
+            val pdfDocument: PdfDocument = pdfiumCore.newDocument(fd)
+            pdfiumCore.openPage(pdfDocument, pageNumber)
+            val width = pdfiumCore.getPageWidthPoint(pdfDocument, pageNumber)
+            val height = pdfiumCore.getPageHeightPoint(pdfDocument, pageNumber)
+            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            pdfiumCore.renderPageBitmap(pdfDocument, bmp, pageNumber, 0, 0, width, height)
+            saveImage(bmp)
+            pdfiumCore.closeDocument(pdfDocument)
+        return bmp
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    val FOLDER = Environment.getExternalStorageDirectory().toString() + "/PDF"
+    private fun saveImage(bmp: Bitmap) {
+        var out: FileOutputStream? = null
+        try {
+            val folder = File(FOLDER)
+            if (!folder.exists()) folder.mkdirs()
+            val file = File(folder, "PDF.png")
+            out = FileOutputStream(file)
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out) // bmp is your Bitmap instance
+        } catch (e: Exception) {
+            //todo with exception
+        } finally {
+            try {
+                if (out != null) out.close()
+            } catch (e: Exception) {
+                //todo with exception
+            }
+        }
     }
 }

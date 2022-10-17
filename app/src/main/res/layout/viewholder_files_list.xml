@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="180dp"
-    android:layout_height="160dp"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
     android:elevation="10dp"
-    android:background="@drawable/myrect"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:background="@color/white_theme_A">
     <ImageView
         android:layout_width="match_parent"
@@ -23,12 +23,12 @@
         android:layout_height="wrap_content"
         android:id="@+id/tvFileName"
         android:text="File"
+        android:background="#864B4B4A"
         android:textColor="@color/white_theme_A"
-        android:maxLines="1"
         android:ellipsize="end"
         android:gravity="left"
-        android:textSize="18sp"
-        android:padding="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:textSize="16sp"
+        android:padding="10dp"
+        android:layout_alignParentBottom="true"/>
+    </RelativeLayout>
+</RelativeLayout>

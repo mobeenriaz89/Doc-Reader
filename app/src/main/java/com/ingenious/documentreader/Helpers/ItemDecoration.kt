@@ -21,7 +21,7 @@ class ItemDecoration(private val space: Int) : ItemDecoration() {
         if (parent.getChildLayoutPosition(view) == 0) {
             outRect.top = space
         } else {
-            outRect.top = 0
+            outRect.top = space
         }
     }
 

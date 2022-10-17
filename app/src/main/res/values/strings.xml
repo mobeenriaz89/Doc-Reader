@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Document Reader</string>
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="admob_app_id">ca-app-pub-9660071510663714~6437218827</string>
+    <string name="admob_add_id">ca-app-pub-9660071510663714/1134551561</string>
+    <string name="admob_add_id_test">ca-app-pub-3940256099942544/6300978111</string>
 </resources>

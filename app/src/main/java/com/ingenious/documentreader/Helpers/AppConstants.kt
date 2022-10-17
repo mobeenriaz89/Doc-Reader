@@ -6,6 +6,6 @@ object AppConstants {
 
     const val REQUEST_CODE_PERMISSION_STORAGE = 1
 
-    const val FILE_TYPE_APPLICATION_PDF = "application/pdf"
+    const val FILE_TYPE_APPLICATION_PDF = "file/pdf"
 
 }

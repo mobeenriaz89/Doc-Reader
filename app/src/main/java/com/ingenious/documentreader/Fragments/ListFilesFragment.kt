@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ingenious.documentreader.Adapters.FilesListAdapter
 import com.ingenious.documentreader.Helpers.AppConstants
 import com.ingenious.documentreader.Helpers.ItemDecoration
-import com.ingenious.documentreader.Helpers.UIHelper
 import com.ingenious.documentreader.Interfaces.AppPermissionInterface
 import com.ingenious.documentreader.Models.FileModel
 import com.ingenious.documentreader.R
@@ -30,7 +29,6 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.roundToInt
 
 class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope {
 
@@ -59,6 +57,16 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
                     clNoAccess.visibility = View.VISIBLE
             }
         }
+
+    val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ){ isGranted: Boolean ->
+        if(isGranted){
+            permissionGranted(permission_type_manage_storage)
+        }else{
+            permissionDenied(permission_type_manage_storage)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -94,14 +102,14 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
                 clNoAccess.visibility = View.GONE
             }
         } else {
-            checkForPermission(permission_type_manage_storage, this)
+            checkForPermission(permissionLauncher,permission_type_manage_storage, this)
         }
     }
 
     private fun setupList() {
             rvFilesList.layoutManager = GridLayoutManager(context,2)
         rvFilesList.addItemDecoration(
-            ItemDecoration(UIHelper.dpToPx(8F,resources).roundToInt()))
+            ItemDecoration(20))
                 filesListAdapter = FilesListAdapter(filesList, context)
             rvFilesList.adapter = filesListAdapter
     }

@@ -24,5 +24,5 @@
         ads:layout_constraintRight_toRightOf="parent"
         ads:layout_constraintBottom_toBottomOf="parent"
         ads:adSize="BANNER"
-        ads:adUnitId="@string/admob_id_test"/>
+        ads:adUnitId="@string/admob_add_id_test"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

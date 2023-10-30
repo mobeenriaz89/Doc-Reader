@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.ParcelFileDescriptor
+import android.provider.DocumentsContract
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
@@ -50,11 +51,8 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
         registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-                if(Environment.isExternalStorageManager()) {
-                    clNoAccess.visibility = View.GONE
-                    loadList()
-                }else
-                    clNoAccess.visibility = View.VISIBLE
+                clNoAccess.visibility = View.GONE
+                rvFilesList.visibility = View.GONE
             }
         }
 
@@ -90,7 +88,9 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
 
     private fun permissionCheck(didRetry: Boolean){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
+            clNoAccess.visibility = View.GONE
+            rvFilesList.visibility = View.GONE
+            /*if (!Environment.isExternalStorageManager()) {
                 if(didRetry) {
                     val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                     activityResultLauncher.launch(intent)
@@ -100,10 +100,24 @@ class ListFilesFragment : AppFragment(), AppPermissionInterface, CoroutineScope 
             } else {
                 loadList()
                 clNoAccess.visibility = View.GONE
-            }
+            }*/
         } else {
             checkForPermission(permissionLauncher,permission_type_manage_storage, this)
         }
+    }
+
+    fun openFile() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/pdf"
+
+            // Optionally, specify a URI for the file that should appear in the
+            // system file picker when it loads.
+            //putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+        }
+        activityResultLauncher.launch(intent)
+
+        //startActivityForResult(intent, PICK_PDF_FILE)
     }
 
     private fun setupList() {

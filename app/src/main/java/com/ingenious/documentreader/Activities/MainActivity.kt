@@ -2,6 +2,7 @@ package com.ingenious.documentreader.Activities
 
 import android.app.Activity
 import android.content.Intent
+import android.content.Intent.ACTION_GET_CONTENT
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
@@ -77,10 +78,9 @@ class MainActivity : AppActivity(), AppPermissionInterface {
 
     private fun openFileExplorer() {
        // activityResultLauncher.launch(AppConstants.FILE_TYPE_APPLICATION_PDF)
-        val pdfIntent = Intent(Intent.ACTION_GET_CONTENT)
+        val pdfIntent = Intent(ACTION_GET_CONTENT)
         pdfIntent.type = "application/pdf"
         pdfIntent.addCategory(Intent.CATEGORY_OPENABLE)
-        startActivityForResult(pdfIntent, 12)
         getFilesLauncher.launch(pdfIntent)
     }
 

@@ -31,6 +31,8 @@ object AppPermissionManager {
                     permissionLauncher.launch(type)
                 }
             }
+        }else{
+            permissionManager.permissionGranted(type)
         }
     }
 

@@ -40,7 +40,7 @@ class FilesListAdapter(private val _filesList: ArrayList<FileModel>, _context: C
         return this.filesList.count()
     }
 
-    private fun openDocActivity(path: String){
+     fun openDocActivity(path: String){
         var intent = Intent(this.context, DocViewActivity::class.java)
         intent.putExtra(AppConstants.KEY_FILE_PATH,path)
         this.context?.startActivity(intent)
